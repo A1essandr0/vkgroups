@@ -60,12 +60,14 @@ current_table = pd.read_csv(data_loader.csvpath + GList.pop() + '.csv', sep=";",
 
 while GList != []:
     next_group = GList.pop()
-    current_table = data_prep.subscribers_tables_merge(current_table, next_group, verbose=False)
+    current_table = data_prep.subscribers_tables_merge(current_table, next_group, verbose=True)
     print("{0} обработано".format(next_group))
 
-# todo: генерить создающий запрос из data_loader.groups_data_fields на лету
+fields = ', '.join(
+    [field_name + ' TEXT' for field_name in data_loader.user_data_fields]
+) + ', group_subscribed TEXT'
 conn = connect("subscribers.db")
-creating_query = "CREATE TABLE if not exists Subscribers (id TEXT, first_name TEXT, last_name TEXT, bdate TEXT, city TEXT, group_subscribed TEXT)"
+creating_query = "CREATE TABLE if not exists Subscribers ({0})".format(fields)
 conn.execute(creating_query)
 
 current_table.to_sql("Subscribers", conn, index=False, if_exists='replace')

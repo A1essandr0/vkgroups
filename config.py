@@ -1,5 +1,7 @@
 
-groups_list = (
+groups_list = ('championat_cybersport',)
+
+_groups_list = (
         'rambler',
         'ramblermail',
         'horoscopesrambler',
