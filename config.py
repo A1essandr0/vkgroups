@@ -16,5 +16,5 @@ api_version = 5.95
 user_data_fields = ('id', 'first_name', 'last_name', 'bdate', 'city')
 group_data_fields = ('screen_name', 'members_count')
 csvpath = 'csv/'
-
+batch = 1000
 

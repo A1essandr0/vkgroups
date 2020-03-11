@@ -1,10 +1,10 @@
-#!/bin/usr/python3
+#!/bin/usr/python
 
 import json
 import requests
-from time import sleep
+from time import sleep, perf_counter
 from os import path, mkdir
-from config import groups_list, api_version, user_data_fields, group_data_fields, csvpath
+from config import groups_list, api_version, user_data_fields, group_data_fields, csvpath, batch
 from sconfig import access_token
 
 def get_vk_data(api_method, parameters):
@@ -17,7 +17,33 @@ def get_vk_data(api_method, parameters):
     req = requests.post(method_url, data=parameters)
     return json.loads(req.text)['response']
 
-def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=1000,
+def validate_user_data(user_data, group_id, fields_to_validate=('first_name', 'last_name', 'city')):
+    """
+    Функция проверяет и готовит данные
+    """
+    for user in user_data:
+        if user['first_name'] == 'DELETED': # удаленные аккаунты не нужны
+            continue
+        if 'city' not in user:
+            user['city'] = 'NULL' # отсутствующие поля превращаются в строку 'NULL'
+        else:
+            user['city'] = user['city']['title']
+
+        for field in fields_to_validate:
+            if ';' in user[field]:
+                user[field] = user[field].replace(';','') # ; используется как разделитель в csv    
+
+        line = ";".join(
+            (   str(user['id']),
+                user['first_name'],
+                user['last_name'],
+                user.get('bdate', 'NULL'),
+                user['city'],
+                group_id
+            ))
+        yield line
+
+def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=batch,
                             groups=groups_list, group_data_fields=group_data_fields, user_data_fields=user_data_fields,
                             access_token=access_token, api_version=api_version):
     """
@@ -27,35 +53,11 @@ def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=1000,
     которых приходится делать паузы.
     Выгрузки помещаются в <path>/<grp>.csv, после завершения работы они не удаляются и могут занимать прилично места.
     """
-    def validate_user_data(user_data, fields_to_validate=('first_name', 'last_name', 'city')):
-        for user in user_data:
-            if user['first_name'] == 'DELETED': # удаленные аккаунты не нужны
-                continue
-            if 'city' not in user:
-                user['city'] = 'NULL' # отсутствующие поля превращаются в строку 'NULL'
-            else:
-                user['city'] = user['city']['title']
-
-            for field in fields_to_validate:
-                if ';' in user[field]:
-                    user[field] = user[field].replace(';','') # ; используется как разделитель в csv    
-
-            line = ";".join(
-                (   str(user['id']),
-                    user['first_name'],
-                    user['last_name'],
-                    user.get('bdate', 'NULL'),
-                    user['city'],
-                    group_member_parameters['group_id']
-                ))
-            yield line
-
-
+    start_time = perf_counter()
     if not path.exists(f_path):
         mkdir(f_path)
 
     for grp in groups:
-
         groups_info_parameters = {
             'group_id': grp,
             'fields': ",".join(group_data_fields),
@@ -68,8 +70,6 @@ def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=1000,
         fh = open(f_path + grp + '.csv', "w")
         print(";".join(user_data_fields) + ";group_subscribed", file=fh)
 
-
-        ################
         for offset in batch_offset_points:
             if offset != 0 and offset % (batch_size*100) == 0: # паузы между сотнями партий
                 if verbose:
@@ -88,17 +88,21 @@ def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=1000,
             }
             subscribers_names = get_vk_data(api_method="groups.getMembers", parameters=group_member_parameters)
 
-            lines = validate_user_data(subscribers_names['items'])
+            lines = validate_user_data(subscribers_names['items'], group_id=group_member_parameters['group_id'])
             for line in lines:
                 print(line, file=fh)
 
-
-
             if verbose:
-                print("Группа {0}, партия {1} обработана".format(grp, offset))
+                print("Группа {0}, партия {1} обработана".format(grp, offset))                
             sleep(0.1) # пауза между партиями
 
         fh.close()
 
+    elapsed = perf_counter() - start_time
+    if verbose:
+        print("Всего на загрузку данных по группам {0} ушло {1}".format(groups, elapsed))
+
+
+# Если запущено как standalone, то обновляет версию данных в csv файлах
 if __name__ == "__main__":
    get_subscribers_data_to_csv()

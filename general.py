@@ -39,24 +39,28 @@
 # решено не применять. Вместо дельт просто каждый день создается новая база.
 
 import pandas as pd
-import data_loader # Модуль загрузчика
-import data_prep   # Модуль подготовки данных
 from os import path
 from datetime import date
 from sqlite3 import connect
+
+import config # Настройки
+import data_loader # Модуль загрузчика
+import data_loader_async # Асинхронный вариант загрузчика
+import data_prep   # Модуль подготовки данных
 
 # Если состояние базы актуально, скрипт останавливается
 if path.exists('subscribers.db') and date.fromtimestamp(path.getctime("subscribers.db")) == date.today():
     raise FileExistsError("Состояние базы актуально")
 
-# Блок обращений к vk api. Если csv-файлы уже загружены, установить loader_enabled в false.
-loader_enabled = True
-if loader_enabled:
-    data_loader.get_subscribers_data_to_csv()
+# Блок обращений к vk api (синхронный или асинхронный)
+# Если csv-файлы уже загружены, установить loader в None.
+loader = data_loader
+if loader:
+    loader.get_subscribers_data_to_csv()
 
 # Блок загрузки в базу
-GList = list(data_loader.groups_list)
-current_table = pd.read_csv(data_loader.csvpath + GList.pop() + '.csv', sep=";", header=0, dtype=str)
+GList = list(config.groups_list)
+current_table = pd.read_csv(config.csvpath + GList.pop() + '.csv', sep=";", header=0, dtype=str)
 
 while GList != []:
     next_group = GList.pop()
@@ -64,8 +68,9 @@ while GList != []:
     print("{0} обработано".format(next_group))
 
 fields = ', '.join(
-    [field_name + ' TEXT' for field_name in data_loader.user_data_fields]
+    [field_name + ' TEXT' for field_name in config.user_data_fields]
 ) + ', group_subscribed TEXT'
+# На случай sql injection
 conn = connect("subscribers.db")
 creating_query = "CREATE TABLE if not exists Subscribers ({0})".format(fields)
 conn.execute(creating_query)
