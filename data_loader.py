@@ -47,6 +47,7 @@ def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=batch,
                             groups=groups_list, group_data_fields=group_data_fields, user_data_fields=user_data_fields,
                             access_token=access_token, api_version=api_version):
     """
+    Синхронный вариант загрузчика.
     Для каждого сообщества ВК, указанного в groups_list функция вытаскивает число подписчиков сообществ, а затем выгружает
     для всех из них данные полей, указанных в user_data_fields.
     По ограничениям api можно вытаскивать не более 1000 полей за раз и ограничений на однотипные запросы, из-за
@@ -93,7 +94,7 @@ def get_subscribers_data_to_csv(f_path=csvpath, verbose=True, batch_size=batch,
                 print(line, file=fh)
 
             if verbose:
-                print("Группа {0}, партия {1} обработана".format(grp, offset))                
+                print("(sync) Группа {0}, партия {1} обработана".format(grp, offset))                
             sleep(0.1) # пауза между партиями
 
         fh.close()

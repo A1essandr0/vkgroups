@@ -1,7 +1,7 @@
 
-groups_list = ('championat_cybersport',)
+_groups_list = ('afisha', 'livejournal')
 
-_groups_list = (
+groups_list = (
         'rambler',
         'ramblermail',
         'horoscopesrambler',
