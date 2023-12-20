@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "vkgroups"
+version = "0.1.0"
+description = ""
+authors = ["Alexander Kochurov <akrendering@mail.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiohttp = "^3.9.1"
+requests = "^2.31.0"
+PyYAML = "^6.0.1"
+pandas = "^2.1.4"
+tomli = "^2.0.1"
+configloader = "^1.0.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.2"
+mypy = "^1.7.1"
+invoke = "^2.2.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,23 @@
+LOGGING_LEVEL: 'INFO'
+LOGGING_FORMAT: '%(asctime)-15s | %(levelname)s | %(filename)s | %(lineno)d: %(message)s'
+
+APPLICATION_START_AWAIT_SECONDS: 1
+AFTER_ERROR_AWAIT_SECONDS: 60
+DATA_UPDATE_PERIOD_HOURS: 24
+
+GROUPS_LIST_ALT: ['rambler', 'ramblermail', 'horoscopesrambler', 'championat', 'championat.auto', 'championat_cybersport', 'livejournal', 'afisha']
+GROUPS_LIST: ['championat.auto', 'championat_cybersport']
+
+VK_ACCESS_TOKEN: "1234"
+VK_API_VERSION: 5.95
+MAX_SIMULTANEOUS_REQUESTS: 3 # VK api limit is 3 requests per sec
+VK_REQUEST_TIMEOUT: 1
+BATCH_SIZE: 1000
+
+USER_DATA_FIELDS:  ['id', 'first_name', 'last_name', 'bdate', 'city']
+GROUP_DATA_FIELDS: ['screen_name', 'members_count']
+
+CSV_PATH: 'csv/'
+SQLITE_PATH: 'subscribers.db'
+
+CSV_ALREADY_LOADED: False
